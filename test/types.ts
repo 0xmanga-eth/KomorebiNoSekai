@@ -14,4 +14,5 @@ declare module "mocha" {
 export interface Signers {
   admin: SignerWithAddress;
   anyone: SignerWithAddress;
+  whitelistedUser: SignerWithAddress;
 }

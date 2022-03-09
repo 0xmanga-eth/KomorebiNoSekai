@@ -47,5 +47,19 @@ export function shouldBehaveLikeBountyFactory(): void {
       .withArgs("0x0000000000000000000000000000000000000000", this.signers.anyone.address, 10);
 
     expect(await this.komorebiNoSekai.balanceOf(this.signers.anyone.address)).to.be.equal(1);
+
+    await this.komorebiNoSekai.connect(this.signers.admin).setWhitelistSaleStartTime(publicSaleTime);
+    await this.komorebiNoSekai.connect(this.signers.admin).setMintlistPrice(publicMintPrice);
+
+    // cannot whitelist mint if not whitelisted
+    await expect(
+      this.komorebiNoSekai.connect(this.signers.whitelistedUser).allowlistMint({ value: publicMintPrice }),
+    ).to.be.revertedWith("not eligible for allowlist mint");
+
+    // can whitelist mint if whitelisted
+    await this.komorebiNoSekai.connect(this.signers.admin).setAllowList([this.signers.whitelistedUser.address], 2);
+    expect(await this.komorebiNoSekai.balanceOf(this.signers.whitelistedUser.address)).to.be.equal(0);
+    await this.komorebiNoSekai.connect(this.signers.whitelistedUser).allowlistMint({ value: publicMintPrice });
+    expect(await this.komorebiNoSekai.balanceOf(this.signers.whitelistedUser.address)).to.be.equal(1);
   });
 }

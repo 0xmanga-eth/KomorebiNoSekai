@@ -14,6 +14,7 @@ describe("Unit tests", function () {
     const signers: SignerWithAddress[] = await ethers.getSigners();
     this.signers.admin = signers[0];
     this.signers.anyone = signers[1];
+    this.signers.whitelistedUser = signers[2];
   });
 
   describe("KomorebiNoSekai", function () {
