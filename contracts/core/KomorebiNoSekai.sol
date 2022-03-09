@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
+// 人類の反撃はこれからだ。
+// jinrui no hangeki wa kore kara da.
+
 // Source code heavily inspired from deployed contract instance of Azuki collection
 // https://etherscan.io/address/0xed5af388653567af2f388e6224dc7c4b3241c544#code
 // The source code in the github does not have some important features.
