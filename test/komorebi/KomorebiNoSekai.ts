@@ -2,7 +2,7 @@ import { artifacts, ethers, waffle } from "hardhat";
 import type { Artifact } from "hardhat/types";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
-import type { KomorebiNoSekai } from "../../src/types/KomorebiNoSekai";
+import type { MockableTimeKomorebiNoSekai } from "../../src/types/MockableTimeKomorebiNoSekai";
 
 import { Signers } from "../types";
 import { shouldBehaveLikeBountyFactory } from "./KomorebiNoSekai.behavior";
@@ -18,8 +18,19 @@ describe("Unit tests", function () {
 
   describe("KomorebiNoSekai", function () {
     beforeEach(async function () {
-      const komorebiNoSekaiArtifact: Artifact = await artifacts.readArtifact("KomorebiNoSekai");
-      this.komorebiNoSekai = <KomorebiNoSekai>await waffle.deployContract(this.signers.admin, komorebiNoSekaiArtifact, []);
+      const komorebiNoSekaiArtifact: Artifact = await artifacts.readArtifact("MockableTimeKomorebiNoSekai");
+
+      const maxBatchSize = 10;
+      const collectionSize = 8888;
+      const amountForDevs = 50;
+
+      this.komorebiNoSekai = <MockableTimeKomorebiNoSekai>(
+        await waffle.deployContract(this.signers.admin, komorebiNoSekaiArtifact, [
+          maxBatchSize,
+          collectionSize,
+          amountForDevs,
+        ])
+      );
     });
 
     shouldBehaveLikeBountyFactory();
