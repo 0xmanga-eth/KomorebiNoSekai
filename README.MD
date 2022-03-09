@@ -13,6 +13,10 @@
   <h3 align="center">8.888 Komorebi Naitos with 200 unique traits coming soon on Ethereum Blockchain! </h3>
 </div>
 
+## Credits
+
+Huge props to Azuki team for the implementation of [ERC721A](https://github.com/chiru-labs/ERC721A) which is a great addition to the Ethereum NFT ecosystem.
+
 ## Usage
 
 ### Pre Requisites
