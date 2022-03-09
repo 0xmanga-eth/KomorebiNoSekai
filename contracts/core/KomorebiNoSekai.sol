@@ -20,6 +20,17 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     uint256 public immutable maxPerAddressDuringMint;
     uint256 public immutable amountForDevs;
 
+    // Furaribi (ふらり火, Furaribi) are the ghost of those murdered
+    // in cold blood by an angry samurai.
+    // They get their namesake from them wandering
+    // aimlessly around the edges of lakes and rivers.
+    uint8 public constant FURARIBI_SIDE = 1;
+
+    // ナイト Naito (from english: "Knight")
+    // ライト Raito (from english: "Light")
+    // They fight against Furaribi spirits to protect humans.
+    uint8 public constant NAITO_RAITO_SIDE = 2;
+
     struct SaleConfig {
         uint32 whitelistSaleStartTime;
         uint32 saleStartTime;
@@ -30,6 +41,7 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     SaleConfig public saleConfig;
 
     mapping(address => uint8) public _allowList;
+    mapping(address => uint8) public _side;
 
     constructor(
         uint256 maxBatchSize_,
@@ -43,7 +55,7 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     function allowlistMint() external payable callerIsUser {
         uint256 price = uint256(saleConfig.mintlistPrice);
         uint256 whitelistSaleStartTime = uint256(saleConfig.whitelistSaleStartTime);
-
+        assignSideIfNoSide(msg.sender);
         require(getCurrentTime() >= whitelistSaleStartTime, "allowlist sale has not begun yet");
         require(price != 0, "allowlist sale has not begun yet");
         require(_allowList[msg.sender] > 0, "not eligible for allowlist mint");
@@ -57,7 +69,7 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
         SaleConfig memory config = saleConfig;
         uint256 price = uint256(config.price);
         uint256 saleStartTime = uint256(config.saleStartTime);
-
+        assignSideIfNoSide(msg.sender);
         require(isPublicSaleOn(price, saleStartTime), "public sale has not begun yet");
         require(totalSupply() + quantity <= collectionSize, "reached max supply");
         require(numberMinted(msg.sender) + quantity <= maxPerAddressDuringMint, "can not mint this many");
@@ -144,5 +156,34 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     function setPrice(uint64 price_) external onlyOwner {
         SaleConfig storage config = saleConfig;
         config.price = price_;
+    }
+
+    function getMySide() public view returns (uint8) {
+        return getSide(msg.sender);
+    }
+
+    function getSide(address account) public view returns (uint8) {
+        return _side[account];
+    }
+
+    function hasSide(address account) public view returns (bool) {
+        return _side[account] != 0;
+    }
+
+    function assignSideIfNoSide(address account) internal {
+        if (!hasSide(account)) {
+            assignSide(account);
+        }
+    }
+
+    function assignSide(address account) internal {
+        require(!hasSide(account), "Account already assigned to a side");
+        uint8 side;
+        if (totalSupply() % 2 == 0) {
+            side = FURARIBI_SIDE;
+        } else {
+            side = NAITO_RAITO_SIDE;
+        }
+        _side[account] = side;
     }
 }
