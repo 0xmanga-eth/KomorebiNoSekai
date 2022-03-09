@@ -18,4 +18,18 @@ task("deploy:Bounties").setAction(async function (taskArguments: TaskArguments, 
   );
   await komorebiNoSekai.deployed();
   console.log("KomorebiNoSekai deployed to: ", komorebiNoSekai.address);
+
+  await sleep(60000);
+
+  console.log("publishing source code to Etherscan");
+
+  const hre = require("hardhat");
+  await hre.run("verify:verify", {
+    address: komorebiNoSekai.address,
+    constructorArguments: [maxBatchSize, collectionSize, amountForDevs],
+  });
 });
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
