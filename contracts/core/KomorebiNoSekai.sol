@@ -8,20 +8,28 @@
 // This is why we used directly the code from the deployed version.
 pragma solidity >=0.8.12;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 import "./ERC721A.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
 import "hardhat/console.sol";
 
 /// @title KomorebiNoSekai NFT collection
 /// @author 0xmanga-eth
-contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
+contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard, VRFConsumerBase {
+    using SafeMath for uint256;
+
     uint256 public immutable maxPerAddressDuringMint;
     uint256 public immutable amountForDevs;
 
     address public constant AZUKI_ADDRESS = 0xED5AF388653567Af2F388E6224dC7C4b3241C544;
+
+    string constant ERROR_NOT_ENOUGH_LINK = "not enough LINK";
 
     // Furaribi (ふらり火, Furaribi) are the ghost of those murdered
     // in cold blood by an angry samurai.
@@ -54,18 +62,37 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     address[] public _whitelistedCollections;
     // Per user assigned side
     mapping(address => uint8) private _side;
+
+    // The winner NFT id
+    uint256 public giftsWinnerTokenId;
     // The winner of the gifts
-    address public giftsWinner;
+    address public giftsWinnerAddress;
     // The list of NFT gifts
     Gift[] public gifts;
+    // The chainlink request id for VRF
+    bytes32 selectRandomGiftWinnerRequestId;
+
+    // Chainlink configuration
+    address _vrfCoordinator;
+    address _linkToken;
+    bytes32 _vrfKeyHash;
+    uint256 _vrfFee;
 
     constructor(
         uint256 maxBatchSize_,
         uint256 collectionSize_,
-        uint256 amountForDevs_
-    ) ERC721A("Komorebi No Sekai", "KNS", maxBatchSize_, collectionSize_) {
+        uint256 amountForDevs_,
+        address vrfCoordinator_,
+        address linkToken_,
+        bytes32 vrfKeyHash_,
+        uint256 vrfFee_
+    ) ERC721A("Komorebi No Sekai", "KNS", maxBatchSize_, collectionSize_) VRFConsumerBase(vrfCoordinator_, linkToken_) {
         maxPerAddressDuringMint = maxBatchSize_;
         amountForDevs = amountForDevs_;
+        _vrfCoordinator = vrfCoordinator_;
+        _linkToken = linkToken_;
+        _vrfKeyHash = vrfKeyHash_;
+        _vrfFee = vrfFee_;
     }
 
     /// @notice Buy a quantity of NFTs during the whitelisted sale.
@@ -294,20 +321,61 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
 
     /// @notice Send NFT gifts to the selected winner.
     /// @dev Throws if the winner is not selected yet.
-    function sendGiftsToWinner() external onlyIfWinnerSelected {
+    function sendGiftsToWinner() external onlyIfWinnerSelected onlyOwner {
         for (uint256 i = 0; i < gifts.length; i++) {
             Gift memory gift = gifts[i];
             IERC721 collection = IERC721(gift.collectionAddress);
             uint256[] memory ids = gift.ids;
             for (uint256 j = 0; j < ids.length; j++) {
                 uint256 id = ids[j];
-                collection.safeTransferFrom(address(this), giftsWinner, id);
+                collection.safeTransferFrom(address(this), giftsWinnerAddress, id);
             }
         }
     }
 
     modifier onlyIfWinnerSelected() {
-        require(giftsWinner != address(0x0), "winner must be selected");
+        require(giftsWinnerAddress != address(0x0), "winner must be selected");
         _;
+    }
+
+    /// @notice Select a random winner using Chainlink VRF.
+    function selectRandomWinnerForGifts() external onlyOwner {
+        require(giftsWinnerAddress == address(0x0), "winner already selected");
+        selectRandomGiftWinnerRequestId = requestRandomness(_vrfKeyHash, _vrfFee);
+    }
+
+    /// @notice Withdraw Link
+    /// @dev See chainlink documentation.
+    function withdrawLink() external onlyOwner {
+        IERC20 erc20 = IERC20(_linkToken);
+        uint256 linkBalance = LINK.balanceOf(address(this));
+        if (linkBalance > 0) {
+            erc20.transfer(owner(), linkBalance);
+        }
+    }
+
+    modifier requireFeeForLinkRequest() {
+        require(LINK.balanceOf(address(this)) >= _vrfFee, ERROR_NOT_ENOUGH_LINK);
+        _;
+    }
+
+    /// @dev See `VRFConsumerBase` documentation.
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+        if (requestId == selectRandomGiftWinnerRequestId && giftsWinnerAddress == address(0x0)) {
+            giftsWinnerTokenId = randomness.mod(totalSupply());
+            giftsWinnerAddress = ownerOf(giftsWinnerTokenId);
+        }
+    }
+
+    /// @notice Add gift to the list of gifts.
+    /// @param collectionAddress Address of the NFT collection.
+    /// @param ids The list of token ids.
+    function addGift(address collectionAddress, uint256[] calldata ids) external {
+        gifts.push(Gift(collectionAddress, ids));
+    }
+
+    /// @notice Update VRF fee.
+    function updateVRFFee(uint256 fee) external onlyOwner {
+        _vrfFee = fee;
     }
 }

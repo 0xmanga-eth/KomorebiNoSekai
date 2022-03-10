@@ -24,12 +24,20 @@ describe("Unit tests", function () {
       const maxBatchSize = 10;
       const collectionSize = 8888;
       const amountForDevs = 50;
+      const vrfCoordinator = "0xf0d54349aDdcf704F77AE15b96510dEA15cb7952";
+      const linkToken = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
+      const vrfKeyHash = "0xAA77729D3466CA35AE8D28B3BBAC7CC36A5031EFDC430821C02BC31A238AF445";
+      const vrfFee = "2000000000000000000"; // 2 LINK
 
       this.komorebiNoSekai = <MockableTimeKomorebiNoSekai>(
         await waffle.deployContract(this.signers.admin, komorebiNoSekaiArtifact, [
           maxBatchSize,
           collectionSize,
           amountForDevs,
+          vrfCoordinator,
+          linkToken,
+          vrfKeyHash,
+          vrfFee,
         ])
       );
     });

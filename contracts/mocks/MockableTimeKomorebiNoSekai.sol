@@ -13,8 +13,22 @@ contract MockableTimeKomorebiNoSekai is KomorebiNoSekai {
     constructor(
         uint256 maxBatchSize_,
         uint256 collectionSize_,
-        uint256 amountForDevs_
-    ) KomorebiNoSekai(maxBatchSize_, collectionSize_, amountForDevs_) {}
+        uint256 amountForDevs_,
+        address vrfCoordinator_,
+        address linkToken_,
+        bytes32 vrfKeyHash_,
+        uint256 vrfFee_
+    )
+        KomorebiNoSekai(
+            maxBatchSize_,
+            collectionSize_,
+            amountForDevs_,
+            vrfCoordinator_,
+            linkToken_,
+            vrfKeyHash_,
+            vrfFee_
+        )
+    {}
 
     function setCurrentTime(uint256 _time) external onlyOwner {
         mockTime = _time;
