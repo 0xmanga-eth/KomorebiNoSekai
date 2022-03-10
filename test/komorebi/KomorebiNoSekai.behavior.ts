@@ -58,8 +58,10 @@ export function shouldBehaveLikeBountyFactory(): void {
 
     // can whitelist mint if whitelisted
     await this.komorebiNoSekai.connect(this.signers.admin).setAllowList([this.signers.whitelistedUser.address], 2);
+    expect(await this.komorebiNoSekai.hasSide(this.signers.whitelistedUser.address)).to.be.false;
     expect(await this.komorebiNoSekai.balanceOf(this.signers.whitelistedUser.address)).to.be.equal(0);
     await this.komorebiNoSekai.connect(this.signers.whitelistedUser).allowlistMint({ value: publicMintPrice });
+    expect(await this.komorebiNoSekai.hasSide(this.signers.whitelistedUser.address)).to.be.true;
     expect(await this.komorebiNoSekai.balanceOf(this.signers.whitelistedUser.address)).to.be.equal(1);
   });
 }

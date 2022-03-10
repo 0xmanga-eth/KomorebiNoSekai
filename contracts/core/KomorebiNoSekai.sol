@@ -179,11 +179,20 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     function assignSide(address account) internal {
         require(!hasSide(account), "Account already assigned to a side");
         uint8 side;
-        if (totalSupply() % 2 == 0) {
+        uint256 seed = uint256(getSeed());
+        if (uint8(seed) % 2 == 0) {
             side = FURARIBI_SIDE;
         } else {
             side = NAITO_RAITO_SIDE;
         }
         _side[account] = side;
+    }
+
+    function assignMeASide() external {
+        assignSideIfNoSide(msg.sender);
+    }
+
+    function getSeed() internal view returns (bytes32) {
+        return keccak256(abi.encodePacked(block.timestamp, block.basefee, gasleft(), msg.sender, totalSupply()));
     }
 }
