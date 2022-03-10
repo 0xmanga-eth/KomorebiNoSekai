@@ -5,7 +5,7 @@ import { KomorebiNoSekai } from "../../src/types/KomorebiNoSekai";
 
 import { KomorebiNoSekai__factory } from "../../src/types/factories/KomorebiNoSekai__factory";
 
-task("deploy:Bounties").setAction(async function (taskArguments: TaskArguments, { ethers }) {
+task("deploy:KomorebiNoSekai").setAction(async function (taskArguments: TaskArguments, { ethers }) {
   const KomorebiNoSekaiFactory: KomorebiNoSekai__factory = <KomorebiNoSekai__factory>(
     await ethers.getContractFactory("KomorebiNoSekai")
   );
