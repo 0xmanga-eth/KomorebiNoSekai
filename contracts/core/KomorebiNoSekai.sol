@@ -8,6 +8,7 @@
 // This is why we used directly the code from the deployed version.
 pragma solidity >=0.8.12;
 
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./ERC721A.sol";
@@ -19,6 +20,8 @@ import "hardhat/console.sol";
 contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     uint256 public immutable maxPerAddressDuringMint;
     uint256 public immutable amountForDevs;
+
+    address public constant AZUKI_ADDRESS = 0xED5AF388653567Af2F388E6224dC7C4b3241C544;
 
     // Furaribi (ふらり火, Furaribi) are the ghost of those murdered
     // in cold blood by an angry samurai.
@@ -41,6 +44,7 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     SaleConfig public saleConfig;
 
     mapping(address => uint8) public _allowList;
+    address[] public _whitelistedCollections;
     mapping(address => uint8) private _side;
 
     constructor(
@@ -58,9 +62,11 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
         assignSideIfNoSide(msg.sender);
         require(getCurrentTime() >= whitelistSaleStartTime, "allowlist sale has not begun yet");
         require(price != 0, "allowlist sale has not begun yet");
-        require(_allowList[msg.sender] > 0, "not eligible for allowlist mint");
+        require(isWhitelisted(msg.sender), "not eligible for allowlist mint");
         require(totalSupply() + 1 <= collectionSize, "reached max supply");
-        _allowList[msg.sender]--;
+        if (_allowList[msg.sender] > 0) {
+            _allowList[msg.sender]--;
+        }
         _safeMint(msg.sender, 1);
         refundIfOver(price);
     }
@@ -194,5 +200,26 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
 
     function getSeed() internal view returns (bytes32) {
         return keccak256(abi.encodePacked(block.timestamp, block.basefee, gasleft(), msg.sender, totalSupply()));
+    }
+
+    function whitelistHoldersOfCollection(address collectionAddress) external onlyOwner {
+        _whitelistedCollections.push(collectionAddress);
+    }
+
+    function whitelistAzukiHolders() external onlyOwner {
+        _whitelistedCollections.push(AZUKI_ADDRESS);
+    }
+
+    function isWhitelisted(address account) internal view returns (bool) {
+        if (_allowList[account] > 0) {
+            return true;
+        }
+        for (uint256 i = 0; i < _whitelistedCollections.length; i++) {
+            IERC721 nftCollection = IERC721(_whitelistedCollections[i]);
+            if (nftCollection.balanceOf(account) > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 }
