@@ -15,8 +15,8 @@ import "./ERC721A.sol";
 
 import "hardhat/console.sol";
 
-/// @title KomorebiNoSekai
-/// @author 0xmanga
+/// @title KomorebiNoSekai NFT collection
+/// @author 0xmanga-eth
 contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     uint256 public immutable maxPerAddressDuringMint;
     uint256 public immutable amountForDevs;
@@ -41,11 +41,23 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
         uint64 price;
     }
 
-    SaleConfig public saleConfig;
+    struct Gift {
+        address collectionAddress;
+        uint256[] ids;
+    }
 
+    // The sale configuration
+    SaleConfig public saleConfig;
+    // Whitelisted addresses
     mapping(address => uint8) public _allowList;
+    // Whitelisted NFT collections
     address[] public _whitelistedCollections;
+    // Per user assigned side
     mapping(address => uint8) private _side;
+    // The winner of the gifts
+    address public giftsWinner;
+    // The list of NFT gifts
+    Gift[] public gifts;
 
     constructor(
         uint256 maxBatchSize_,
@@ -56,6 +68,8 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
         amountForDevs = amountForDevs_;
     }
 
+    /// @notice Buy a quantity of NFTs during the whitelisted sale.
+    /// @dev Throws if user is not whitelisted.
     function allowlistMint() external payable callerIsUser {
         uint256 price = uint256(saleConfig.mintlistPrice);
         uint256 whitelistSaleStartTime = uint256(saleConfig.whitelistSaleStartTime);
@@ -71,6 +85,8 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
         refundIfOver(price);
     }
 
+    /// @notice Buy a quantity of NFTs during the public primary sale.
+    /// @param quantity The number of items to mint.
     function saleMint(uint256 quantity) external payable callerIsUser {
         SaleConfig memory config = saleConfig;
         uint256 price = uint256(config.price);
@@ -83,7 +99,8 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
         refundIfOver(price * quantity);
     }
 
-    // For marketing etc.
+    /// @notice Mint NFTs for dev team.
+    /// @dev For marketing etc.
     function devMint(uint256 quantity) external onlyOwner {
         require(totalSupply() + quantity <= amountForDevs, "too many already minted before dev mint");
         require(quantity % maxBatchSize == 0, "can only mint a multiple of the maxBatchSize");
@@ -93,6 +110,8 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
         }
     }
 
+    /// @notice Refund the difference if user sent more than the specified price.
+    /// @param price The correct price.
     function refundIfOver(uint256 price) private {
         require(msg.value >= price, "Need to send more ETH.");
         if (msg.value > price) {
@@ -100,6 +119,10 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
         }
     }
 
+    /// @notice Return whether or not the public sale is live.
+    /// @param priceWei The price set in WEI.
+    /// @param saleStartTime The start time set.
+    /// @return true if public sale is live, false otherwise.
     function isPublicSaleOn(uint256 priceWei, uint256 saleStartTime) public view returns (bool) {
         return priceWei != 0 && getCurrentTime() >= saleStartTime;
     }
@@ -109,6 +132,9 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
         _;
     }
 
+    /// @notice Add addresses to allow list.
+    /// @param addresses The account addresses to whitelist.
+    /// @param numAllowedToMint The number of allowed NFTs to mint per address.
     function setAllowList(address[] calldata addresses, uint8 numAllowedToMint) external onlyOwner {
         for (uint256 i = 0; i < addresses.length; i++) {
             _allowList[addresses[i]] = numAllowedToMint;
@@ -118,70 +144,104 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     // // metadata URI
     string private _baseTokenURI;
 
+    /// @notice Return the current base URI.
+    /// @return The current base URI.
     function _baseURI() internal view virtual override returns (string memory) {
         return _baseTokenURI;
     }
 
+    /// @notice Set the base URI for the collection.
+    /// @dev Can be used to handle a reveal separately.
+    /// @param baseURI The new base URI.
     function setBaseURI(string calldata baseURI) external onlyOwner {
         _baseTokenURI = baseURI;
     }
 
+    /// @notice Withdraw ETH from the contract.
+    /// @dev Only owner can call this function.
     function withdrawMoney() external onlyOwner nonReentrant {
         (bool success, ) = msg.sender.call{ value: address(this).balance }("");
         require(success, "Transfer failed.");
     }
 
+    /// @notice Return the number of minted NFTs for a given address.
+    /// @param owner The address of the owner.
+    /// @return The number of minted NFTs.
     function numberMinted(address owner) public view returns (uint256) {
         return _numberMinted(owner);
     }
 
+    /// @notice Get ownership data.
+    /// @param tokenId The token id.
+    /// @return The `TokenOwnership` structure data associated to the token id.
     function getOwnershipData(uint256 tokenId) external view returns (TokenOwnership memory) {
         return ownershipOf(tokenId);
     }
 
-    // can be extended for testing purpose
+    /// @notice Return the current time.
+    /// @dev Can be extended for testing purpose.
+    /// @return The current timestamp.
     function getCurrentTime() internal view virtual returns (uint256) {
         return block.timestamp;
     }
 
+    /// @notice Set whitelist sale start time.
+    /// @param whitelistSaleStartTime_ The start time as a timestamp.
     function setWhitelistSaleStartTime(uint32 whitelistSaleStartTime_) external onlyOwner {
         SaleConfig storage config = saleConfig;
         config.whitelistSaleStartTime = whitelistSaleStartTime_;
     }
 
+    /// @notice Set public sale start time.
+    /// @param saleStartTime_ The start time as a timestamp.
     function setSaleStartTime(uint32 saleStartTime_) external onlyOwner {
         SaleConfig storage config = saleConfig;
         config.saleStartTime = saleStartTime_;
     }
 
+    /// @notice Set current price for whitelisted sale.
+    /// @param mintlistPrice_ The price in WEI.
     function setMintlistPrice(uint64 mintlistPrice_) external onlyOwner {
         SaleConfig storage config = saleConfig;
         config.mintlistPrice = mintlistPrice_;
     }
 
+    /// @notice Set current price for public sale.
+    /// @param price_ The price in WEI.
     function setPrice(uint64 price_) external onlyOwner {
         SaleConfig storage config = saleConfig;
         config.price = price_;
     }
 
+    /// @notice Return the side of `msg.sender`.
+    /// @return The side.
     function getMySide() public view returns (uint8) {
         return getSide(msg.sender);
     }
 
+    /// @notice Return the side of a specified address.
+    /// @return The side.
     function getSide(address account) public view returns (uint8) {
         return _side[account];
     }
 
+    /// @notice Return whether or not the specified address is assigned to a side.
+    /// @return true if assigned, false otherwise.
     function hasSide(address account) public view returns (bool) {
         return _side[account] != 0;
     }
 
+    /// @notice Assign a side to the specified address if not assigned yet.
+    /// @param account The address to assign a side to.
     function assignSideIfNoSide(address account) internal {
         if (!hasSide(account)) {
             assignSide(account);
         }
     }
 
+    /// @notice Assign a side to the specified address.
+    /// @dev Throws if address has already a side assigned.
+    /// @param account The address to assign a side to.
     function assignSide(address account) internal {
         require(!hasSide(account), "Account already assigned to a side");
         uint8 side;
@@ -194,22 +254,31 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
         _side[account] = side;
     }
 
+    /// @notice Assign a side to `msg.sender`
     function assignMeASide() external {
         assignSideIfNoSide(msg.sender);
     }
 
+    /// @notice Compute a new seed to serve for simple and non sensitive pseudo random use cases.
+    /// @return The seed to use.
     function getSeed() internal view returns (bytes32) {
         return keccak256(abi.encodePacked(block.timestamp, block.basefee, gasleft(), msg.sender, totalSupply()));
     }
 
+    /// @notice Whitelist holders of specific collection NFTs.
+    /// @param collectionAddress The address of the collection.
     function whitelistHoldersOfCollection(address collectionAddress) external onlyOwner {
         _whitelistedCollections.push(collectionAddress);
     }
 
+    /// @notice Whitelist holders of Azuki NFTs.
     function whitelistAzukiHolders() external onlyOwner {
         _whitelistedCollections.push(AZUKI_ADDRESS);
     }
 
+    /// @notice Return whether or not the specified account is whitelisted.
+    /// @param account The address to check.
+    /// @return true if whitelisted, false otherwise.
     function isWhitelisted(address account) internal view returns (bool) {
         if (_allowList[account] > 0) {
             return true;
@@ -221,5 +290,24 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
             }
         }
         return false;
+    }
+
+    /// @notice Send NFT gifts to the selected winner.
+    /// @dev Throws if the winner is not selected yet.
+    function sendGiftsToWinner() external onlyIfWinnerSelected {
+        for (uint256 i = 0; i < gifts.length; i++) {
+            Gift memory gift = gifts[i];
+            IERC721 collection = IERC721(gift.collectionAddress);
+            uint256[] memory ids = gift.ids;
+            for (uint256 j = 0; j < ids.length; j++) {
+                uint256 id = ids[j];
+                collection.safeTransferFrom(address(this), giftsWinner, id);
+            }
+        }
+    }
+
+    modifier onlyIfWinnerSelected() {
+        require(giftsWinner != address(0x0), "winner must be selected");
+        _;
     }
 }
