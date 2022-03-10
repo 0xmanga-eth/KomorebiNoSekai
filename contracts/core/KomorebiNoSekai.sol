@@ -41,7 +41,7 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard {
     SaleConfig public saleConfig;
 
     mapping(address => uint8) public _allowList;
-    mapping(address => uint8) public _side;
+    mapping(address => uint8) private _side;
 
     constructor(
         uint256 maxBatchSize_,
