@@ -1,6 +1,9 @@
 <div align="center">
   <h1 align="center">Komorebi No Sekai</h1>
   <p align="center">
+    <a href="https://komorebinosekai.com">
+        <img src="https://img.shields.io/badge/Website-https%3A%2F%2Fkomorebinosekai.com-blueviolet">
+    </a>  
     <a href="https://twitter.com/intent/follow?screen_name=KomorebiNoSekai">
         <img src="https://img.shields.io/twitter/follow/KomorebiNoSekai?style=social&logo=twitter"
             alt="follow on Twitter"></a>
