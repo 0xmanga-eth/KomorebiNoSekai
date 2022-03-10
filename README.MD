@@ -12,7 +12,9 @@
     <a href=""><img src="https://img.shields.io/badge/semver-0.0.1-blue"
             alt="License"></a>            
   </p>
-  
+  <p align="center">
+    <img src="resources/img/banner-komorebi.jpg">
+  </p>
   <h3 align="center">8.888 Komorebi Naitos with 200 unique traits coming soon on Ethereum Blockchain! </h3>
 </div>
 
