@@ -17,8 +17,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./ERC721A.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
-import "hardhat/console.sol";
-
 /// @title KomorebiNoSekai NFT collection
 /// @author 0xmanga-eth
 contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard, VRFConsumerBase {
