@@ -75,6 +75,7 @@ contract KomorebiFlipper is Context, Ownable, ReentrancyGuard, VRFConsumerBase {
             IERC20 linkERC20 = IERC20(_linkToken);
             linkERC20.safeTransferFrom(player, address(this), _vrfFee);
         }
+        require(LINK.balanceOf(address(this)) >= _vrfFee, ERROR_NOT_ENOUGH_LINK);
         _komorebiNoSekaiNFT.safeTransferFrom(_msgSender(), address(this), nftStakeId_);
         knsPool.push(nftStakeId_);
         bytes32 vrfRequestId = requestRandomness(_vrfKeyHash, _vrfFee);
@@ -93,6 +94,7 @@ contract KomorebiFlipper is Context, Ownable, ReentrancyGuard, VRFConsumerBase {
             } else {
                 bool coinSide = randomness.mod(2) == 0;
                 game.randomSelectedSide = coinSide;
+                // Handle win
                 if (coinSide == game.userSelectedSide) {
                     game.win = true;
                     game.wonNFT = popAvailableNFT();
@@ -101,6 +103,7 @@ contract KomorebiFlipper is Context, Ownable, ReentrancyGuard, VRFConsumerBase {
                     // Transfer the won NFT to the winner
                     _komorebiNoSekaiNFT.safeTransferFrom(_msgSender(), address(this), game.wonNFT);
                 }
+                // We don't need to do anything special for the case when user lost
             }
             game.completed = true;
         }

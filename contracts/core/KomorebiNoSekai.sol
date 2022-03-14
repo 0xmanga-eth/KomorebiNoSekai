@@ -337,7 +337,7 @@ contract KomorebiNoSekai is Ownable, ERC721A, ReentrancyGuard, VRFConsumerBase {
     }
 
     /// @notice Select a random winner using Chainlink VRF.
-    function selectRandomWinnerForGifts() external onlyOwner {
+    function selectRandomWinnerForGifts() external onlyOwner requireFeeForLinkRequest {
         require(giftsWinnerAddress == address(0x0), "winner already selected");
         selectRandomGiftWinnerRequestId = requestRandomness(_vrfKeyHash, _vrfFee);
     }
