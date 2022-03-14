@@ -23,6 +23,9 @@ contract KomorebiFlipper is Ownable, ReentrancyGuard, VRFConsumerBase {
 
     string constant ERROR_NOT_ENOUGH_LINK = "not enough LINK";
 
+    // KNS NFT contract
+    IERC721 private _komorebiNoSekaiNFT;
+
     // Available KNS NFTs
     uint256[] public knsPool;
 
@@ -33,11 +36,13 @@ contract KomorebiFlipper is Ownable, ReentrancyGuard, VRFConsumerBase {
     uint256 private _vrfFee;
 
     constructor(
+        address knsAddress,
         address vrfCoordinator_,
         address linkToken_,
         bytes32 vrfKeyHash_,
         uint256 vrfFee_
     ) VRFConsumerBase(vrfCoordinator_, linkToken_) {
+        _komorebiNoSekaiNFT = IERC721(knsAddress);
         _vrfCoordinator = vrfCoordinator_;
         _linkToken = linkToken_;
         _vrfKeyHash = vrfKeyHash_;

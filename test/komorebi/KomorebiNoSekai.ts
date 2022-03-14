@@ -46,6 +46,7 @@ describe("Unit tests", function () {
       const komorebiFlipperArtifact: Artifact = await artifacts.readArtifact("KomorebiFlipper");
       this.komorebiFlipper = <KomorebiFlipper>(
         await waffle.deployContract(this.signers.admin, komorebiFlipperArtifact, [
+          this.komorebiNoSekai.address,
           vrfCoordinator,
           linkToken,
           vrfKeyHash,
