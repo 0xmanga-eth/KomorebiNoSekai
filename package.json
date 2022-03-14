@@ -81,6 +81,8 @@
     "coverage": "yarn typechain && hardhat coverage --solcoverjs ./.solcover.js --temp artifacts --testfiles \"test/**/*.ts\"",
     "deploy:nft": "hardhat deploy:KomorebiNoSekai --network mainnet",
     "deploy:nft:testnet": "hardhat deploy:KomorebiNoSekai:Rinkeby --network rinkeby",
+    "deploy:flipper": "hardhat deploy:KomorebiFlipper --network mainnet",
+    "deploy:flipper:testnet": "hardhat deploy:KomorebiFlipper:Rinkeby --network rinkeby",
     "lint": "yarn lint:sol && yarn lint:ts && yarn prettier:check",
     "lint:sol": "solhint --config ./.solhint.json --max-warnings 0 \"contracts/**/*.sol\"",
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",
