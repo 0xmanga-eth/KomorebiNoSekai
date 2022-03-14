@@ -143,4 +143,16 @@ contract KomorebiFlipper is Context, Ownable, ReentrancyGuard, VRFConsumerBase {
         require(knsPool.length > 0, "No more NFT in the pool");
         _;
     }
+
+    /// @dev Add KNS NFTs in the pool.
+    /// @param ids The list of NFT ids.
+    function addInPool(uint256[] calldata ids) external {
+        for (uint256 i; i < ids.length; ) {
+            _komorebiNoSekaiNFT.safeTransferFrom(_msgSender(), address(this), ids[i]);
+            knsPool.push(ids[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
 }
