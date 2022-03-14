@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 const collectionName = "Komorebi No Sekai";
 const collectionSymbol = "KNS";
 
-export function shouldBehaveLikeBountyFactory(): void {
+export function shouldBehaveLikeKomorebiNoSekai(): void {
   it("end to end", async function () {
     // check data after deploy
     expect(await this.komorebiNoSekai.name()).to.be.equal(collectionName);

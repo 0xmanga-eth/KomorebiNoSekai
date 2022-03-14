@@ -2,10 +2,12 @@ import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signe
 import type { Fixture } from "ethereum-waffle";
 
 import type { MockableTimeKomorebiNoSekai } from "../src/types/MockableTimeKomorebiNoSekai";
+import type { KomorebiFlipper } from "../src/types/KomorebiFlipper";
 
 declare module "mocha" {
   export interface Context {
     komorebiNoSekai: MockableTimeKomorebiNoSekai;
+    komorebiFlipper: KomorebiFlipper;
     loadFixture: <T>(fixture: Fixture<T>) => Promise<T>;
     signers: Signers;
   }

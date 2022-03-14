@@ -3,9 +3,11 @@ import type { Artifact } from "hardhat/types";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 import type { MockableTimeKomorebiNoSekai } from "../../src/types/MockableTimeKomorebiNoSekai";
+import type { KomorebiFlipper } from "../../src/types/KomorebiFlipper";
 
 import { Signers } from "../types";
-import { shouldBehaveLikeBountyFactory } from "./KomorebiNoSekai.behavior";
+import { shouldBehaveLikeKomorebiNoSekai } from "./KomorebiNoSekai.behavior";
+import { shouldBehaveLikeKomorebiFlipper } from "./KomorebiFlipper.behavior";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -40,8 +42,19 @@ describe("Unit tests", function () {
           vrfFee,
         ])
       );
+
+      const komorebiFlipperArtifact: Artifact = await artifacts.readArtifact("KomorebiFlipper");
+      this.komorebiFlipper = <KomorebiFlipper>(
+        await waffle.deployContract(this.signers.admin, komorebiFlipperArtifact, [
+          vrfCoordinator,
+          linkToken,
+          vrfKeyHash,
+          vrfFee,
+        ])
+      );
     });
 
-    shouldBehaveLikeBountyFactory();
+    shouldBehaveLikeKomorebiNoSekai();
+    shouldBehaveLikeKomorebiFlipper();
   });
 });

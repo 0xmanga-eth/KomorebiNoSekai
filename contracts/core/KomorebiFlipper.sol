@@ -21,14 +21,16 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 contract KomorebiFlipper is Ownable, ReentrancyGuard, VRFConsumerBase {
     using SafeMath for uint256;
 
-
     string constant ERROR_NOT_ENOUGH_LINK = "not enough LINK";
-    
+
+    // Available KNS NFTs
+    uint256[] public knsPool;
+
     // Chainlink configuration
-    address _vrfCoordinator;
-    address _linkToken;
-    bytes32 _vrfKeyHash;
-    uint256 _vrfFee;
+    address private _vrfCoordinator;
+    address private _linkToken;
+    bytes32 private _vrfKeyHash;
+    uint256 private _vrfFee;
 
     constructor(
         address vrfCoordinator_,
@@ -42,9 +44,13 @@ contract KomorebiFlipper is Ownable, ReentrancyGuard, VRFConsumerBase {
         _vrfFee = vrfFee_;
     }
 
-
     /// @dev See `VRFConsumerBase` documentation.
-    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-       
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {}
+
+    function popAvailableNFT() internal returns (uint256) {
+        require(knsPool.length > 0, "No more NFT in the pool");
+        uint256 id = knsPool[knsPool.length - 1];
+        knsPool.pop();
+        return id;
     }
 }
