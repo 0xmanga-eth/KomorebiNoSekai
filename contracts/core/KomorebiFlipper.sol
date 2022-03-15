@@ -20,6 +20,8 @@ contract KomorebiFlipper is Context, Ownable, ReentrancyGuard, VRFConsumerBase {
     using SafeERC20 for IERC20;
 
     string constant ERROR_NOT_ENOUGH_LINK = "not enough LINK";
+    bytes4 private constant ERC721_RECEIVER_SELECTOR =
+        bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
 
     bool public constant HEADS_SIDE = true;
     bool public constant TAILS_SIDE = false;
@@ -154,5 +156,15 @@ contract KomorebiFlipper is Context, Ownable, ReentrancyGuard, VRFConsumerBase {
                 ++i;
             }
         }
+    }
+
+    /// @dev See `IERC721.onERC721Received`
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) public pure returns (bytes4) {
+        return ERC721_RECEIVER_SELECTOR;
     }
 }
