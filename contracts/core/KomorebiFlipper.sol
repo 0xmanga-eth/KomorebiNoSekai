@@ -71,7 +71,7 @@ contract KomorebiFlipper is Context, Ownable, ReentrancyGuard, VRFConsumerBase {
 
     /// @dev Play a new game.
     /// nftStakeId_ The id of the stake NFT.
-    function play(uint256 nftStakeId_, bool chosenSide) external onlyIfNFTLeftInPool {
+    function play(uint256 nftStakeId_, bool chosenSide) external onlyIfNFTLeftInPool nonReentrant {
         address player = _msgSender();
         if (_userMustPayLinkFees) {
             IERC20 linkERC20 = IERC20(_linkToken);
@@ -92,7 +92,7 @@ contract KomorebiFlipper is Context, Ownable, ReentrancyGuard, VRFConsumerBase {
             // Terminate the game and give back the NFT put at stake
             if (knsPool.length < 1) {
                 // Give back the NFT put at stake by user
-                _komorebiNoSekaiNFT.safeTransferFrom(_msgSender(), address(this), game.nftStakeId);
+                _komorebiNoSekaiNFT.safeTransferFrom(address(this), game.player, game.nftStakeId);
             } else {
                 bool coinSide = randomness.mod(2) == 0;
                 game.randomSelectedSide = coinSide;
@@ -101,15 +101,19 @@ contract KomorebiFlipper is Context, Ownable, ReentrancyGuard, VRFConsumerBase {
                     game.win = true;
                     game.wonNFT = popAvailableNFT();
                     // Give back the NFT put at stake by user
-                    _komorebiNoSekaiNFT.safeTransferFrom(_msgSender(), address(this), game.nftStakeId);
+                    _komorebiNoSekaiNFT.safeTransferFrom(address(this), game.player, game.nftStakeId);
                     // Transfer the won NFT to the winner
-                    _komorebiNoSekaiNFT.safeTransferFrom(_msgSender(), address(this), game.wonNFT);
+                    _komorebiNoSekaiNFT.safeTransferFrom(address(this), game.player, game.wonNFT);
                 }
                 // We don't need to do anything special for the case when user lost
             }
             game.completed = true;
         }
     }
+
+    /// @dev Complete a pending game.
+    /// @param gameId The game identifier.
+    function completeGame(bytes32 gameId) external {}
 
     /// @dev Get the number of available NFTs to win in the pool.
     function getAvailableNFTCount() external view returns (uint256) {
